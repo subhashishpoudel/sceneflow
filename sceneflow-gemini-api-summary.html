@@ -1,0 +1,287 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SceneFlow — Gemini API Summary</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    background: #ffffff;
+    color: #1f2328;
+    padding: 32px 16px 48px;
+  }
+  .page { max-width: 760px; margin: 0 auto; }
+
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #57606a; font-size: 13px; margin-bottom: 32px; }
+
+  h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #57606a;
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .card {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 13.5px;
+    margin-bottom: 4px;
+  }
+  .card p { color: #1f2328; font-size: 13.5px; }
+  .card .meta { color: #57606a; font-size: 12.5px; margin-top: 4px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-bottom: 10px;
+  }
+  th {
+    text-align: left;
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    padding: 7px 10px;
+    font-weight: 600;
+    color: #57606a;
+    font-size: 12.5px;
+  }
+  td {
+    border: 1px solid #e5e7eb;
+    padding: 7px 10px;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  code {
+    background: #f0f0f0;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 12px;
+    color: #1f2328;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-right: 4px;
+  }
+  .tag-blue  { background: #dbeafe; color: #1d4ed8; }
+  .tag-green { background: #dcfce7; color: #15803d; }
+  .tag-orange{ background: #ffedd5; color: #c2410c; }
+  .tag-purple{ background: #ede9fe; color: #6d28d9; }
+
+  .prompt-box {
+    background: #f7f8fa;
+    border-left: 3px solid #3b82d4;
+    border-radius: 0 4px 4px 0;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #1f2328;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+
+  .warn {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #9a3412;
+    margin-bottom: 10px;
+  }
+
+  .info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #1e40af;
+    margin-bottom: 10px;
+  }
+
+  ul { padding-left: 18px; }
+  ul li { margin-bottom: 4px; font-size: 13.5px; }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+    font-size: 12px;
+    color: #57606a;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>SceneFlow — Gemini API Summary</h1>
+  <div class="subtitle">How SceneFlow uses the Gemini API · models · prompts · voice controls · known behaviours</div>
+
+  
+  <h2>API Endpoint</h2>
+  <div class="card">
+    <div class="card-title">All calls go to one endpoint</div>
+    <p><code>https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent</code></p>
+    <div class="meta">Authentication via <code>x-goog-api-key</code> header — key read from environment variables only, never hardcoded.</div>
+  </div>
+
+  
+  <h2>Models Used</h2>
+  <table>
+    <thead>
+      <tr><th>Purpose</th><th>Model</th><th>Response Type</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-blue">TTS</span> Text-to-Speech (voiceover)</td>
+        <td><code>gemini-2.5-flash-preview-tts</code></td>
+        <td>AUDIO — raw PCM (24 kHz, mono, 16-bit)</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-purple">Transcribe</span> Audio → word timestamps</td>
+        <td><code>gemini-3.5-transcribe</code></td>
+        <td>TEXT — strict JSON array of words + timestamps</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-green">Image</span> Scene image generation</td>
+        <td><code>gemini-2.5-flash-image</code></td>
+        <td>IMAGE — inline PNG/JPEG bytes</td>
+      </tr>
+    </tbody>
+  </table>
+
+  
+  <h2>API Keys</h2>
+  <table>
+    <thead>
+      <tr><th>Environment Variable</th><th>Used For</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>GEMINI_API_KEY</code></td>
+        <td>TTS voiceover generation + fallback for images</td>
+      </tr>
+      <tr>
+        <td><code>GEMINI_IMAGE_API_KEY</code></td>
+        <td>Image generation (falls back to <code>GEMINI_API_KEY</code> if not set)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  
+  <h2>Prompts &amp; Instructions Sent to the API</h2>
+
+  <div class="card">
+    <div class="card-title"><span class="tag tag-blue">TTS</span> Voiceover Generation</div>
+    <p>No fixed system instruction. The prompt is built as:</p>
+    <div class="prompt-box" style="margin-top:8px">
+      If style provided: <strong>{style instruction}</strong><br /><br />{scene narration text}<br /><br />
+      If no style: just the raw scene text.
+    </div>
+    <div class="meta">Example style: "Speak slowly and calmly, with a cinematic tone."</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="tag tag-purple">Transcribe</span> Word Timestamp Extraction</div>
+    <p>Fixed instruction sent alongside the audio:</p>
+    <div class="prompt-box" style="margin-top:8px">
+      "Transcribe the provided audio EXACTLY as spoken. Return a strict JSON array of objects, each with keys <strong>"start"</strong> (seconds, float), <strong>"end"</strong> (seconds, float), and <strong>"word"</strong> (string, lowercase). Do not include commentary, markdown code fences, or any text outside the JSON array. Preserve every spoken word in order."
+    </div>
+    <div class="meta">Temperature set to 0.0 for deterministic output.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="tag tag-green">Image</span> Image Generation</div>
+    <p>No fixed instruction. The raw scene description/prompt is sent directly with <code>responseModalities: ["IMAGE"]</code>.</p>
+  </div>
+
+  
+  <h2>Voice Controls in the GUI</h2>
+  <table>
+    <thead>
+      <tr><th>Control</th><th>Type</th><th>Default</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Voice</strong></td>
+        <td>Dropdown</td>
+        <td><code>Kore</code></td>
+        <td>Selects the Gemini preset voice speaker</td>
+      </tr>
+      <tr>
+        <td><strong>Style (optional)</strong></td>
+        <td>Free-text input</td>
+        <td><em>empty</em></td>
+        <td>Natural-language speaking style prepended to the TTS prompt</td>
+      </tr>
+      <tr>
+        <td><strong>Regenerate existing</strong></td>
+        <td>Checkbox</td>
+        <td>unchecked</td>
+        <td>Forces re-generation even if a WAV already exists</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card">
+    <div class="card-title">Available Voice Presets</div>
+    <p>
+      <code>Kore</code>  <code>Puck</code>  <code>Zephyr</code>  <code>Charon</code>  <code>Fenrir</code>  <code>Leda</code>  <code>Orus</code>  <code>Aoede</code>
+    </p>
+    <div class="meta">Soft list — not validated by the app. Any name is passed directly to the API.</div>
+  </div>
+
+  
+  <h2>Why Some Voices Sound Inconsistent</h2>
+
+  <div class="warn">
+    <strong>No hard speed/pitch/rate controls are sent to the API.</strong> The Gemini TTS API does not expose <code>speakingRate</code>, <code>pitch</code>, or SSML — those belong to Google Cloud TTS (a different product entirely).
+  </div>
+
+  <ul>
+    <li>Each voice preset has its own built-in character — some are naturally faster, quieter, or more energetic than others.</li>
+    <li>Each TTS batch call is independent — the model can choose slightly different energy/pacing each time even with the same voice.</li>
+    <li>The <strong>only lever available</strong> is the Style field. A detailed instruction like <em>"Speak at a slow, steady, consistent pace throughout. Do not whisper, rush, or change your tone."</em> helps but is not guaranteed.</li>
+  </ul>
+
+  
+  <h2>How TTS Batching Works</h2>
+  <div class="card">
+    <div class="card-title">Scenes are batched to reduce API calls</div>
+    <p>Multiple scene scripts are joined with a <code>\n\n</code> paragraph break and sent as one TTS request. The combined audio is then split back into per-scene WAV files using forced alignment (local <code>MMS_FA</code> model) + FFmpeg.</p>
+    <div class="meta">Max 15 scenes per chunk · Max 6,000 characters per chunk · Timeout: 360 seconds per request</div>
+  </div>
+
+  
+  <h2>Logging</h2>
+  <div class="info">
+    A new log file is created in <code>logs/run_YYYYMMDD_HHMMSS.log</code> on <strong>every app launch</strong> via <code>main.py</code>, regardless of success or failure. If no log appears, the app was not launched through <code>main.py</code>.
+  </div>
+
+  <footer>Made with IBM Bob</footer>
+</div>
+</body>
+</html>

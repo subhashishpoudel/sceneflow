@@ -1,0 +1,28 @@
+# SceneFlow Video Assembler — Python dependencies
+#
+# The application is built entirely on Python's standard library
+# (tkinter, subprocess, pathlib, re, threading, etc.).
+#
+# The ONLY external requirement is FFmpeg (including ffprobe), which must be
+# installed on the system and available on PATH OR bundled locally under
+# tools/ffmpeg/bin/ (ffmpeg.exe, ffprobe.exe, ffplay.exe + avcodec-63.dll
+# etc. for TorchCodec compatibility).
+#
+# requests is required for Gemini TTS API calls (sceneflow/tts/).
+requests
+
+# soundfile is required for the local forced-alignment WAV decoder
+# (sceneflow/tts/forced_aligner.py).  Its pip wheel bundles
+# libsndfile, so no separate system install is needed on any OS.
+# soundfile deliberately avoids TorchCodec for WAV loading, eliminating the
+# need for a system FFmpeg shared-library install just to decode audio.
+soundfile
+
+# OPTIONAL — heavy installs needed ONLY for local forced-alignment (CPU builds:
+#   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+#   pip install torchcodec  (optional: torchcodec is used by torchaudio >= 2.11;
+#                           SceneFlow's WAV decoder path bypasses it, but installing it
+#                           ensures any future torchaudio codec calls still work)
+#
+# To run:
+#   python main.py
