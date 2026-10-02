@@ -1,34 +1,19 @@
 # SceneFlow Video Assembler
 
-Automatically turn externally-generated scene assets (images + voice audio) into one finished MP4 video using FFmpeg.
+Turn scene assets (images + voiceover audio) into a finished MP4 video — with Ken-Burns effects, crossfade transitions, AI-generated voiceovers via Gemini TTS, and AI-generated images via Imagen.
 
 ---
 
-## What it does
+## Features
 
-Given a project folder containing:
-
-```
-MyProject/
-â”œâ”€â”€ script.txt          (optional â€“ for script preview inside the app)
-â”œâ”€â”€ images/
-â”‚   â”œâ”€â”€ 001.png
-â”‚   â”œâ”€â”€ 002.png
-â”‚   â””â”€â”€ ...
-â””â”€â”€ voice/
-    â”œâ”€â”€ 001.wav
-    â”œâ”€â”€ 002.wav
-    â””â”€â”€ ...
-```
-
-SceneFlow will:
-
-1. **Detect scenes** â€” match images and audio files by their scene number prefix.
-2. **Validate** â€” report any missing image or audio file before rendering.
-3. **Read exact audio duration** â€” using `ffprobe`; the audio length drives the scene duration.
-4. **Apply Ken-Burns effect** â€” smooth zoom/pan on each still image (adjustable intensity, or off).
-5. **Add crossfade transitions** â€” `fade`, `dissolve`, `wipe`, `slide`, or hard cut.
-6. **Render to MP4** â€” a single `ffmpeg` command does everything; real-time progress shown.
+- **Scene assembly** — match images and audio by scene number, validate before render
+- **Ken-Burns effect** — smooth zoom/pan on still images (Off / Subtle / Medium / Strong / Intense)
+- **Crossfade transitions** — fade, dissolve, wipe, slide, or hard cut
+- **Gemini TTS voiceover** — generate per-scene voiceover audio from your script using Google Gemini
+- **Imagen image generation** — generate scene images from text prompts using Google Imagen
+- **Forced alignment** — align generated audio to script words using local CTC alignment (PyTorch)
+- **Subtitles** — auto-generate `.ass` subtitle files
+- **Real-time progress** — live FFmpeg render progress inside the GUI
 
 ---
 
@@ -36,30 +21,114 @@ SceneFlow will:
 
 | Requirement | Notes |
 |---|---|
-| Python 3.9 or newer | `tkinter` must be included (standard on Windows/Mac) |
-| FFmpeg â‰¥ 4.3 | Includes `ffprobe`. Download from <https://ffmpeg.org/download.html> |
-
-**No pip packages are required.** The application uses only the Python standard library.
+| Python 3.9 or newer | `tkinter` must be included (standard on Windows/macOS) |
+| FFmpeg = 4.3 | Must include `ffprobe`. See installation below. |
+| `requests` | HTTP calls to Gemini and Imagen APIs |
+| `soundfile` | WAV decoding for forced alignment |
+| `torch` + `torchaudio` | **Optional** — only needed for local forced alignment |
 
 ---
 
 ## Installation
 
-1. **Download or clone** this repository.
-2. **Install FFmpeg** and make sure `ffmpeg` and `ffprobe` are on your `PATH`:
-   - Windows: <https://ffmpeg.org/download.html> â†’ "Windows builds" â†’ extract and add `bin/` to PATH.
-   - macOS: `brew install ffmpeg`
-   - Linux: `sudo apt install ffmpeg` / `sudo dnf install ffmpeg`
-3. **Run** the application:
-   ```
-   python main.py
-   ```
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/subhashishpoudel/sceneflow.git
+cd sceneflow
+```
+
+### 2. Install Python dependencies
+
+```bash
+pip install requests soundfile
+```
+
+If you want **local forced alignment** (word-level audio timestamps without a network call):
+
+```bash
+# CPU-only build (recommended unless you have a CUDA GPU)
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+```
+
+### 3. Install FFmpeg
+
+FFmpeg must be installed and accessible. Choose one:
+
+**Windows**
+- Download from https://ffmpeg.org/download.html ? "Windows builds"
+- Extract the archive and add the `bin/` folder to your system `PATH`
+- Or place `ffmpeg.exe`, `ffprobe.exe`, and the `.dll` files into `tools/ffmpeg/bin/` inside this repo (SceneFlow checks there automatically)
+
+**macOS**
+```bash
+brew install ffmpeg
+```
+
+**Linux**
+```bash
+sudo apt install ffmpeg        # Debian/Ubuntu
+sudo dnf install ffmpeg        # Fedora/RHEL
+```
+
+### 4. Set your Gemini API key
+
+SceneFlow uses Google Gemini for TTS voiceover generation and Google Imagen for image generation.
+You need a Gemini API key from https://aistudio.google.com/app/apikey.
+
+**Windows (persistent — recommended)**
+```powershell
+[System.Environment]::SetEnvironmentVariable("GEMINI_API_KEY", "your-key-here", "User")
+```
+Then restart your terminal.
+
+**Windows (current session only)**
+```powershell
+$env:GEMINI_API_KEY = "your-key-here"
+```
+
+**macOS / Linux**
+```bash
+export GEMINI_API_KEY="your-key-here"
+```
+Add that line to `~/.bashrc` or `~/.zshrc` to make it permanent.
+
+> **Optional:** If you want to use a separate key for image generation, also set `GEMINI_IMAGE_API_KEY`. If not set, it falls back to `GEMINI_API_KEY`.
+
+> **Security note:** Never paste your API key into source code or commit it to git. The `.gitignore` in this repo already blocks `.env` files.
 
 ---
 
-## Naming convention for assets
+## Running the app
 
-Files inside `images/` and `voice/` are matched by the **leading integer in the filename stem**.
+```bash
+python main.py
+```
+
+On Windows you can also double-click **`run.bat`** — it reads `GEMINI_API_KEY` from your user environment automatically and launches the app.
+
+---
+
+## Project folder structure
+
+The app works with a project folder you create. Expected layout:
+
+```
+MyProject/
++-- script.txt          (optional — for script preview and TTS generation)
++-- images/
+¦   +-- 001.png
+¦   +-- 002.png
+¦   +-- ...
++-- voice/
+    +-- 001.wav
+    +-- 002.wav
+    +-- ...
+```
+
+### File naming convention
+
+Images and audio files are matched by the **leading integer** in the filename.
 
 | Image file | Audio file | Scene |
 |---|---|---|
@@ -78,9 +147,9 @@ Files inside `images/` and `voice/` are matched by the **leading integer in the 
 
 ## Script file (optional)
 
-Place a `script.txt` in your project root. Three formats are auto-detected:
+Place a `script.txt` in your project folder. Three formats are auto-detected:
 
-### 1. Marker-based (recommended for multi-line scenes)
+### 1. Marker-based (recommended)
 ```
 [SCENE 001]
 The hero stands alone on the mountain,
@@ -105,11 +174,13 @@ Each non-empty line maps to one scene in order.
 
 | Section | What to do |
 |---|---|
-| **Project Folder** | Click **Browseâ€¦** to pick your project folder, then **Load â†»** |
-| **Detected Scenes** | Review matched pairs; missing files shown in red |
+| **Project Folder** | Click **Browse…** to pick your project folder, then **Load ?** |
+| **Detected Scenes** | Review matched pairs — missing files are shown in red |
 | **Script Preview** | Click a scene row to preview its script text |
+| **Voiceover** | Generate AI voiceover for all scenes using Gemini TTS |
+| **Images** | Generate scene images from script text using Imagen |
 | **Render Settings** | Choose resolution, FPS, transition style, Ken-Burns intensity, and output file |
-| **Action bar** | Click **â–¶ Render** to start; **âœ• Cancel** to abort |
+| **Action bar** | Click **? Render** to start; **? Cancel** to abort at any time |
 
 ---
 
@@ -117,27 +188,27 @@ Each non-empty line maps to one scene in order.
 
 | Setting | Options | Default |
 |---|---|---|
-| Resolution | 1920Ã—1080 Â· 1280Ã—720 Â· 3840Ã—2160 Â· 1080Ã—1920 | 1920Ã—1080 |
-| Frame Rate | 24 Â· 25 Â· 30 Â· 60 fps | 30 |
-| Transition | fade Â· dissolve Â· wipeleft Â· wiperight Â· slideleft Â· slideright Â· none | fade |
-| Transition duration | 0.1 â€“ 2.0 s | 0.5 s |
-| Ken-Burns intensity | Off Â· Subtle Â· Medium Â· Strong Â· Intense | Medium |
-| Encode preset | ultrafast Â· fast Â· medium Â· slow | fast |
+| Resolution | 1920×1080 · 1280×720 · 3840×2160 · 1080×1920 | 1920×1080 |
+| Frame Rate | 24 · 25 · 30 · 60 fps | 30 |
+| Transition | fade · dissolve · wipeleft · wiperight · slideleft · slideright · none | fade |
+| Transition duration | 0.1 – 2.0 s | 0.5 s |
+| Ken-Burns intensity | Off · Subtle · Medium · Strong · Intense | Medium |
+| Encode preset | ultrafast · fast · medium · slow | fast |
 
 ---
 
 ## How the FFmpeg pipeline works
 
 ```
-Image 1 â”€â”€â”              â”Œâ”€â”€ xfade â”€â”€â”
-Image 2 â”€â”€â”¤  Ken-Burns   â”‚           â”œâ”€â”€ xfade â”€â”€â–¶ final video
-Image N â”€â”€â”˜  (zoompan)   â””â”€â”€â”€â”€â”€â”€â”€â”€ ...
-Audio 1 â”€â”€â”
-Audio 2 â”€â”€â”¤  concat (audio)          â”€â”€â–¶ final audio
-Audio N â”€â”€â”˜
+Image 1 --+              +-- xfade --+
+Image 2 --¦  Ken-Burns   ¦           +-- xfade --? final video
+Image N --+  (zoompan)   +-------- ...
+Audio 1 --+
+Audio 2 --¦  concat (audio)          --? final audio
+Audio N --+
 ```
 
-Each still image is converted into a video clip using the FFmpeg `zoompan` filter (Ken-Burns). The clips are then chained together with `xfade` transitions. All audio files are concatenated in order. The final video and audio streams are muxed into an MP4 with H.264/AAC encoding.
+Each image is converted to a video clip with the FFmpeg `zoompan` filter (Ken-Burns). Clips are chained with `xfade` transitions. All audio is concatenated. The final streams are muxed into MP4 with H.264/AAC encoding.
 
 ---
 
@@ -145,36 +216,54 @@ Each still image is converted into a video clip using the FFmpeg `zoompan` filte
 
 | Problem | Solution |
 |---|---|
-| "FFmpeg Not Found" at startup | Install FFmpeg and add its `bin/` folder to your PATH. Restart the terminal / the app. |
-| Scene is red in the table | A matching image or audio file is missing. Add the missing file and reload. |
-| Render fails with filter_complex error | Reduce transition duration â€” it must be shorter than the shortest scene's audio. |
-| Video is black | Make sure images are in a supported format and not corrupted. |
-| Ken-Burns looks choppy | Increase the encode preset (medium/slow) or reduce intensity. |
+| "FFmpeg Not Found" at startup | Install FFmpeg and add its `bin/` folder to your PATH, then restart the terminal and the app |
+| TTS / image generation fails with "API key" error | Set `GEMINI_API_KEY` as an environment variable (see step 4 above) |
+| Scene is red in the table | A matching image or audio file is missing — add it and reload |
+| Render fails with `filter_complex` error | Reduce transition duration — it must be shorter than the shortest scene audio |
+| Video is black | Check that images are in a supported format and not corrupted |
+| Ken-Burns looks choppy | Use `medium` or `slow` encode preset, or reduce intensity |
+| `ModuleNotFoundError: requests` | Run `pip install requests soundfile` |
+| Forced alignment not working | Run `pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu` |
 
 ---
 
-## Project structure (source)
+## Source structure
 
 ```
-sceneflow_video_assembler/
-â”œâ”€â”€ main.py                          Entry point
-â”œâ”€â”€ requirements.txt
-â”œâ”€â”€ sceneflow/
-â”‚   â”œâ”€â”€ gui.py                       Tkinter application window
-â”‚   â”œâ”€â”€ core/
-â”‚   â”‚   â”œâ”€â”€ project_loader.py        Loads a project folder
-â”‚   â”‚   â”œâ”€â”€ asset_manager.py         Image/audio discovery & pairing
-â”‚   â”‚   â”œâ”€â”€ script_parser.py         Parses script.txt
-â”‚   â”‚   â””â”€â”€ timeline_builder.py      Builds FFmpeg filter_complex
-â”‚   â”œâ”€â”€ ffmpeg/
-â”‚   â”‚   â”œâ”€â”€ detector.py              Finds ffmpeg/ffprobe on the system
-â”‚   â”‚   â”œâ”€â”€ audio_analyzer.py        Reads audio duration via ffprobe
-â”‚   â”‚   â”œâ”€â”€ filter_builder.py        Ken-Burns filter expressions
-â”‚   â”‚   â””â”€â”€ renderer.py              Runs FFmpeg subprocess + progress
-â”‚   â””â”€â”€ models/
-â”‚       â”œâ”€â”€ scene.py                 SceneData dataclass
-â”‚       â”œâ”€â”€ project.py               ProjectData dataclass
-â”‚       â””â”€â”€ render_config.py         RenderConfig dataclass
+sceneflow/
++-- main.py                          Entry point
++-- run.bat                          Windows launcher (reads API key from user env)
++-- requirements.txt                 Python dependencies
++-- sceneflow/
+¦   +-- gui.py                       Tkinter application window
+¦   +-- core/
+¦   ¦   +-- project_loader.py        Loads a project folder
+¦   ¦   +-- asset_manager.py         Image/audio discovery & pairing
+¦   ¦   +-- scene_parser.py          Scene detection logic
+¦   ¦   +-- script_parser.py         Parses script.txt
+¦   ¦   +-- timeline_builder.py      Builds FFmpeg filter_complex
+¦   +-- ffmpeg/
+¦   ¦   +-- detector.py              Finds ffmpeg/ffprobe on the system
+¦   ¦   +-- audio_analyzer.py        Reads audio duration via ffprobe
+¦   ¦   +-- audio_splitter.py        Splits audio chunks
+¦   ¦   +-- filter_builder.py        Ken-Burns filter expressions
+¦   ¦   +-- block_renderer.py        Per-block render logic
+¦   ¦   +-- renderer.py              Runs FFmpeg subprocess + progress
+¦   +-- tts/
+¦   ¦   +-- config.py                API key helpers, model config
+¦   ¦   +-- gemini_client.py         Gemini TTS + transcription API wrapper
+¦   ¦   +-- voiceover_generator.py   Orchestrates TTS generation per scene
+¦   ¦   +-- forced_aligner.py        Local CTC forced alignment (torchaudio)
+¦   ¦   +-- text_aligner.py          Text-level alignment utilities
+¦   +-- imagen/
+¦   ¦   +-- imagen_client.py         Google Imagen API wrapper
+¦   ¦   +-- image_generator.py       Per-scene image generation
+¦   +-- subtitles/
+¦   ¦   +-- ass_generator.py         ASS subtitle file generator
+¦   +-- models/
+¦       +-- scene.py                 SceneData dataclass
+¦       +-- project.py               ProjectData dataclass
+¦       +-- render_config.py         RenderConfig dataclass
 ```
 
 ---
